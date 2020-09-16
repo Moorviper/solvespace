@@ -1,0 +1,35 @@
+name: C/C++ CI macos
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: change date in version
+      run: |
+        sed "s/+UNKNOWN/_$(date '+%F')/" version.inc > version.date.inc
+        mv version.date.inc version.inc
+    - name: brewinstall git cmake
+      run: brew install git cmake
+    - name: mkdir build
+      run: mkdir build
+    - name: submodules normal
+      run: git submodule update --init
+    - name: submodules if normal fails
+      run: git pull --recurse-submodules
+    - name: cmake build
+      working-directory: ./build
+      run: cmake .. -DCMAKE_OSX_DEPLOYMENT_TARGET="10.13" -DCMAKE_BUILD_TYPE=Release
+    - name: make build
+      working-directory: ./build
+      run: make
+    - name: update Info.plist
+      working-directory: ./build/src
+      run: sed "s/+UNKNOWN/_$(date '+%F')/" Info.plist >Info.date.plist.
